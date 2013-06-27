@@ -1,0 +1,11 @@
+{
+  "name": "Static_Server",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node static_server.js"
+  },
+  "dependencies": {
+    "express": "3.2.6"
+  }
+}

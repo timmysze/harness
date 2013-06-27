@@ -1,0 +1,272 @@
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+  <title>n-Queens Client</title>
+  
+  <meta charset="utf-8">
+  
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:400,600,800">
+  <link rel="stylesheet" href="theme/css/font-awesome.css">
+  
+  <link rel="stylesheet" href="theme/css/bootstrap.css">
+  <link rel="stylesheet" href="theme/css/bootstrap-responsive.css">
+
+  <link rel="stylesheet" href="./theme/css/ui-lightness/jquery-ui-1.8.21.custom.css"> 
+  
+  <link rel="stylesheet" href="theme/css/application.css">
+  <link rel="stylesheet" href="theme/css/pages/dashboard.css">
+
+  <script src="theme/js/libs/modernizr-2.5.3.min.js"></script>
+  <script src="http://10.0.1.54:5000/socket.io/socket.io.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+</head>
+
+<body>
+
+<div id="wrapper">
+
+
+<div id="masthead">
+  
+  <div class="container">
+    
+    <div class="masthead-pad">
+      
+      <div class="masthead-text">
+        <h2>Welcome to 26-Queens</h2>
+        <p class="client-id">You are client: 0.</p>
+      </div> <!-- /.masthead-text -->
+      
+    </div>
+    
+  </div> <!-- /.container --> 
+  
+</div> <!-- /#masthead -->
+
+
+
+
+<div id="content">
+
+  <div class="container">
+    
+    <div class="row">
+      
+      <div class="span4">
+        <h3 class="job-desc">We are not currently solving n-queens.</h3>
+        <table class="table stat-table">
+          <tbody>
+            <tr>
+              <td class="value jobs-completed">0</td>
+              <td class="full">Jobs Completed</td>
+            </tr>
+            <tr>
+              <td class="value total-boards">0</td>
+              <td class="full">Breadth-First Operations</td>
+            </tr>
+            <tr>
+              <td class="value operations-performed">0</td>
+              <td class="full">Depth-First Operations</td>
+            </tr>
+            <tr>
+              <td class="value total-solutions">0</td>
+              <td class="full">Solutions Found</td>
+            </tr>
+          </tbody>
+        </table>
+      </div> <!-- /.span4 -->
+      
+      <div class="span8">
+        
+      </div> <!-- /.span8 -->
+      
+    </div> <!-- /.row -->
+
+  </div> <!-- /.container -->
+
+</div> <!-- /#content -->
+
+</div> <!-- /#wrapper -->
+
+<div id="footer">
+    
+  <div class="container">
+    
+    <div class="row">
+      
+      <div class="span6">
+        <a href="#">26Queens.com</a>
+      </div> <!-- /span6 -->
+      
+      <div id="builtby" class="span6">
+        <a href="http://hackreactor.com">Built at Hack Reactor.</a>        
+      </div> <!-- /.span6 -->
+      
+    </div> <!-- /row -->
+    
+  </div> <!-- /container -->
+  
+</div> <!-- /#footer -->
+
+<script src="theme/js/libs/jquery-1.7.2.min.js"></script>
+<script src="theme/js/libs/jquery-ui-1.8.21.custom.min.js"></script>
+<script src="theme/js/libs/jquery.ui.touch-punch.min.js"></script>
+
+<script src="theme/js/libs/bootstrap/bootstrap.min.js"></script>
+<script>
+$('body').append('<a href="http://hackreactor.com"><img style="position: absolute; top: 0; right: 0; border: 0; z-index: 99999;" src="http://i.imgur.com/x86kKmF.png alt="Built at Hack Reactor"></a>');
+
+$(function () {
+  
+  
+});
+
+</script>
+<script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+<script>
+  // console.log = function(){};
+
+  var Supercomputer = io.connect('http://10.0.1.54:5000'),
+      Pawns = new Worker('./clientMap.js'),
+      n, localsols = 0, localOps = 0, id = 0, startTime, elapsedTime, endTime, ops, localJobs = 0, localBoards = 0;
+
+  var myRootRef = new Firebase('queensdemo.firebaseIO.com/');
+
+  var rand = function() {
+      return Math.random().toString(36).substr(2); // remove `0.`
+  };
+
+  var clientID = rand();
+
+  var updateClientID = function () {
+    $('.client-id')[0].textContent = 'You are client: ' + clientID;
+  };
+
+  var updateJob = function (n) {
+    $('.job-desc')[0].textContent = 'You are currently solving ' + n + '-queens.';
+  };
+
+  var updateLocalSolutions = function () {
+    $('.total-solutions')[0].textContent = '' + localsols;
+  };
+
+  var updateLocalOperations = function () {
+    $('.operations-performed')[0].textContent = '' + localOps;
+  };
+
+  var updateJobs = function () {
+    $('.jobs-completed')[0].textContent = '' + localJobs;
+  };
+
+  var updateBoards = function () {
+    $('.total-boards')[0].textContent = '' + localBoards;
+  };
+
+  var updateOps = function (ops) {
+    $('.ops')[0].textContent = '' + ops;
+  };
+
+  var updateFireBase = function () {
+    myRootRef.child(clientID).update({boards: localBoards, solutions: localsols,  operations: localOps,  jobs: localJobs});
+  };
+
+  Supercomputer.on('setN', function (dimension) {
+    n = dimension;
+    console.log("Initializing Pawns for an n("+n+") Queens job");
+    updateJob(n);
+    updateClientID();
+    updateFireBase();
+    Pawns.postMessage({
+      'type': 'init',
+      'data': dimension
+    });
+  });
+
+  Supercomputer.on('map', function (branch) {
+    console.log("Sending new branch to local Pawns", branch);
+    // startTime = new Date();
+    Pawns.postMessage({
+      'type': 'map',
+      'data': branch
+    });
+  });
+
+  Supercomputer.on('open', function (branch) {
+    console.log("Pawns inflating Supercomputer branch", branch);
+    // startTime = new Date();
+    Pawns.postMessage({
+      'type': 'open',
+      'data': branch
+    });
+  });
+
+  Supercomputer.on('jobDone', function (solutions) {
+    console.log('Congratulations. We solved n( %d )!\n You found %d out of %d solutions', n, localsols, solutions);
+    Pawns.postMessage({
+      'type': 'terminate'
+    });
+  });
+
+  Pawns.onmessage = function(message) {
+    switch (message.data.type) {
+      case 'solutions':
+        console.log("Sending %d solutions to Supercomputer", message.data.data);
+        console.log("Performed %d operations", message.data.ops);
+        localsols += message.data.data;
+        localOps += message.data.ops;
+        // endTime = new Date();
+        // elapsedTime = (endTime - startTime) / 1000;
+        // ops = Math.round(message.data.ops / elapsedTime);
+        localJobs++;
+        updateLocalSolutions();
+        updateJobs();
+        // updateOps(ops);
+        updateLocalOperations();
+        Supercomputer.emit('result', message.data.data);
+        updateFireBase();
+        console.log('emitted');
+        break;
+      case 'widened':
+        // localOps += message.data.ops;
+        // endTime = new Date();
+        // elapsedTime = (endTime - startTime) / 1000;
+        // ops = Math.round(message.data.ops / elapsedTime);
+        localJobs++;
+        localBoards += message.data.data.length;
+        // update local boards
+        updateJobs();
+        updateBoards();
+        // updateOps(ops);
+        updateLocalOperations();
+        // console.log("Sending %d branches to Supercomputer", message.data.data.length);
+        // localsols += message.data.data;
+        Supercomputer.emit('deepbranches', message.data.data);
+        updateFireBase();
+        break;
+      case 'initialized':
+        console.log("Signalling Supercomputer for work");
+        Supercomputer.emit('initialized');
+        break;
+      case 'console':
+        console.log(message.data.data);
+        break;
+      default:
+        console.log(message.data);
+        throw new Error ("Invalid message from Pawns");
+    }
+  };
+
+  Pawns.onerror = function(e) {
+    console.log(e);
+  };
+
+</script>
