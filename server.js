@@ -62,7 +62,7 @@ var innKeeper = {
     console.log(clc.yellow("Checked out Client %s\nIP: %s"), target, this.clients[target].transport.handshake.address);
     this.clients[target].timer = process.hrtime();
     this.clients[target].workingOn[0] = (func === 'map') ? 1 : 0;
-    this.clients[target].workingOn[1] = job;    
+    this.clients[target].workingOn[1] = job;
     this.clients[target].transport.emit(func, job);
   },
   stopClient: function(userid) {
@@ -121,7 +121,7 @@ var Camelot = {
     while (result[0] && (result[0][3] <= depth)) {
       (result.length%500 === 0) && console.log(result.length);
       d = result.shift();
-      mask = (d[3] === 1) ? (d[0] | d[1] | d[2] | ((1<<(this.n/2))-1)) : 
+      mask = (d[3] === 1) ? (d[0] | d[1] | d[2] | ((1<<(this.n/2))-1)) :
         (d[0] | d[1] | d[2]);
       for (possible = ~(mask) & cap; possible > 0; possible^=pick) {
         pick = -possible & possible;
@@ -150,7 +150,7 @@ var Camelot = {
   },
   open: function() {
     console.log(clc.blue("%d Boards inflated by sockets. Continue with job?"), mapQueues[1].length);
-    // busyFOff || (this.setBusy(true) && 
+    // busyFOff || (this.setBusy(true) &&
       console.log(busyFOff)
     if (!busyFOff) {
       this.setBusy(true)
@@ -174,7 +174,7 @@ var kingMaker = {
       CamelotSnapshot.active && (!CamelotSnapshot.opened || mapQueues[0].length || mapQueues[1].length || innKeeper.working.length || Camelot.teardown());
       CamelotSnapshot.active && mapQueues[1].length && (CamelotSnapshot.opened || mapQueues[0].length || innKeeper.working.length || Camelot.open());
       CamelotSnapshot.active && innKeeper.ready.length && mapQueues[0].length && that.opener();
-      CamelotSnapshot.active && innKeeper.ready.length && CamelotSnapshot.opened && mapQueues[1].length && that.mate();      
+      CamelotSnapshot.active && innKeeper.ready.length && CamelotSnapshot.opened && mapQueues[1].length && that.mate();
     });
   },
   mate: function() {
@@ -279,6 +279,6 @@ app.get('/abort/reset', function(req, res) {
 });
 });
 
-server.listen(5000, function() {
+server.listen(80, function() {
   console.log('Listening on port 5000');
 });
