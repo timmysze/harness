@@ -1,7 +1,8 @@
 // console.log = function(){};
 
 var mapQueues, jobTime, busyFOff = false, multiplier, metusers = {},
-    app = require('express')(),
+    express = require('express'),
+    app = express(),
     CamelotStore,
     reactiveDB = require('mongodb').Db.connect('mongodb://temp:temp@ds029658.mongolab.com:29658/queensdemo', function(err, db) {
       (err === null) && (db) && console.log('Connected to Camelot DB');
@@ -236,6 +237,8 @@ io.sockets.on('connection', function (Pawn) {
     kingMaker.check();
   });
 });
+
+app.use(express.static(__dirname + '/static_server'));
 
 app.get('/', function(req,res) {
   res.send(200);
